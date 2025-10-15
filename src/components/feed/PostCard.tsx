@@ -1,5 +1,5 @@
-import React from 'react';
-import { Card, CardHeader, CardContent, Avatar, IconButton, Box, Typography, TextField, Stack } from '@mui/material';
+import type { FC } from 'react';
+import { Card, CardHeader, CardContent, Avatar, IconButton, Box, Typography, TextField, Stack, Fade } from '@mui/material';
 import { MoreVert, FavoriteBorder, Favorite, ChatBubbleOutline, Send, BookmarkBorder } from '@mui/icons-material';
 import { useAuth } from '@/contexts/AuthContext';
 import { toggleLike, addComment } from '@/lib/posts';
@@ -26,11 +26,12 @@ interface PostCardProps {
   likedByMe?: boolean;
 }
 
-export const PostCard: React.FC<PostCardProps> = ({ header, content, engagement, postId, likedByMe }) => {
+export const PostCard: FC<PostCardProps> = ({ header, content, engagement, postId, likedByMe }) => {
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const [commentText, setCommentText] = useState('');
   const firstImage = content.images[0];
+  const [likedAnim, setLikedAnim] = useState(false);
 
   return (
     <Card>
@@ -41,10 +42,34 @@ export const PostCard: React.FC<PostCardProps> = ({ header, content, engagement,
         subheader={`${header.location ? header.location + ' • ' : ''}${header.timestamp}`}
       />
 
-      <Box sx={{ width: '100%', bgcolor: 'grey.100', aspectRatio: '1 / 1' }}>
+      <Box
+        sx={{ position: 'relative', width: '100%', bgcolor: 'grey.100', aspectRatio: '1 / 1' }}
+        onDoubleClick={async () => {
+          if (!postId || !user?.uid) return;
+          if (!likedByMe) {
+            setLikedAnim(true);
+            setTimeout(() => setLikedAnim(false), 800);
+          }
+          // optimistic like on double-tap
+          queryClient.setQueryData<any>(['feed'], (old) => {
+            if (!Array.isArray(old)) return old;
+            return old.map((p) =>
+              p.id === postId
+                ? { ...p, likes: likedByMe ? p.likes : [...p.likes, user!.uid] }
+                : p
+            );
+          });
+          await toggleLike(postId, user.uid, Boolean(likedByMe));
+        }}
+      >
         {firstImage ? (
           <Box component="img" src={firstImage} alt="post" sx={{ width: '100%', height: '100%', objectFit: 'cover' }} />
         ) : null}
+        <Fade in={likedAnim} timeout={{ enter: 100, exit: 700 }}>
+          <Box sx={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <Favorite sx={{ fontSize: 96, color: 'rgba(255,255,255,0.9)', textShadow: '0 2px 8px rgba(0,0,0,0.35)' }} />
+          </Box>
+        </Fade>
       </Box>
 
       <CardContent sx={{ pt: 1 }}>

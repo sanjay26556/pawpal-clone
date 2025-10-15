@@ -1,13 +1,15 @@
 import React from 'react';
 import { Box, AppBar, Toolbar, Typography, IconButton, Avatar, Menu, MenuItem } from '@mui/material';
-import { Logout, AccountCircle, Pets } from '@mui/icons-material';
+import { Logout, AccountCircle, Pets, MailOutline, DarkMode, LightMode } from '@mui/icons-material';
 import { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { HomeFeedScreen } from '@/components/screens/HomeFeedScreen';
+import { ColorModeContext } from '@/App';
 
 const Index = () => {
   const { user, logout } = useAuth();
+  const colorMode = React.useContext(ColorModeContext);
   const navigate = useNavigate();
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
 
@@ -38,6 +40,13 @@ const Index = () => {
           <Typography variant="h6" component="div" sx={{ flexGrow: 1, fontWeight: 700 }}>
             PawPal
           </Typography>
+
+          <IconButton color="inherit" onClick={() => navigate('/messages')} sx={{ mr: 1 }}>
+            <MailOutline />
+          </IconButton>
+          <IconButton color="inherit" onClick={colorMode.toggleColorMode} sx={{ mr: 1 }}>
+            {colorMode.mode === 'dark' ? <LightMode /> : <DarkMode />}
+          </IconButton>
 
           <IconButton
             size="large"

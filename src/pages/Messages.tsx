@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from 'react';
-import { Box, Typography, TextField, List, ListItem, ListItemText, Stack, Button, Avatar, Chip } from '@mui/material';
+import { useState, useEffect } from 'react';
+import { Box, Typography, TextField, Stack, IconButton, Avatar, Paper } from '@mui/material';
+import { ArrowBack, CameraAlt, Image as ImageIcon, Send } from '@mui/icons-material';
 import { useAuth } from '@/contexts/AuthContext';
 import { collection, addDoc, onSnapshot, query, orderBy, limit } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
@@ -43,52 +44,66 @@ export default function MessagesPage() {
   };
 
   return (
-    <Box sx={{ p: 2, height: 'calc(100vh - 120px)', display: 'flex', flexDirection: 'column' }}>
-      <Typography variant="h6" sx={{ mb: 2 }}>Community Chat</Typography>
-      
+    <Box sx={{ display: 'flex', flexDirection: 'column', height: '100vh' }}>
+      {/* Header */}
+      <Box sx={{ px: 2, py: 1.5, display: 'flex', alignItems: 'center', borderBottom: '1px solid', borderColor: 'divider' }}>
+        <ArrowBack sx={{ mr: 1 }} />
+        <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>Community Chat</Typography>
+      </Box>
+
       {/* Messages */}
-      <Box sx={{ flex: 1, overflow: 'auto', mb: 2 }}>
+      <Box sx={{ flex: 1, overflow: 'auto', p: 2, bgcolor: 'grey.50' }}>
         {messages.length === 0 ? (
           <Typography color="text.secondary" textAlign="center" sx={{ mt: 4 }}>
             No messages yet. Start the conversation!
           </Typography>
         ) : (
-          messages.map((msg) => (
-            <Box key={msg.id} sx={{ mb: 2, display: 'flex', alignItems: 'flex-start', gap: 1 }}>
-              <Avatar sx={{ width: 32, height: 32, bgcolor: 'primary.main' }}>
-                {msg.username.charAt(0).toUpperCase()}
-              </Avatar>
-              <Box sx={{ flex: 1 }}>
-                <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 0.5 }}>
-                  <Typography variant="subtitle2">{msg.username}</Typography>
-                  <Chip 
-                    label={msg.timestamp.toLocaleTimeString()} 
-                    size="small" 
-                    variant="outlined"
-                    sx={{ fontSize: '0.7rem', height: 20 }}
-                  />
-                </Stack>
-                <Typography variant="body2">{msg.text}</Typography>
+          messages.map((msg) => {
+            const isMine = user && msg.userId === user.uid;
+            return (
+              <Box key={msg.id} sx={{ display: 'flex', mb: 1.5, justifyContent: isMine ? 'flex-end' : 'flex-start' }}>
+                {!isMine && (
+                  <Avatar sx={{ width: 28, height: 28, bgcolor: 'primary.main', mr: 1 }}>
+                    {msg.username.charAt(0).toUpperCase()}
+                  </Avatar>
+                )}
+                <Paper elevation={0} sx={{
+                  px: 1.5,
+                  py: 1,
+                  maxWidth: '75%',
+                  bgcolor: isMine ? 'primary.main' : 'grey.200',
+                  color: isMine ? 'primary.contrastText' : 'text.primary',
+                  borderRadius: isMine ? '16px 16px 4px 16px' : '16px 16px 16px 4px',
+                }}>
+                  <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap' }}>{msg.text}</Typography>
+                  <Typography variant="caption" sx={{ opacity: 0.7, display: 'block', mt: 0.5 }}>
+                    {msg.timestamp.toLocaleTimeString()}
+                  </Typography>
+                </Paper>
               </Box>
-            </Box>
-          ))
+            );
+          })
         )}
       </Box>
 
-      {/* Message input */}
-      <Stack direction="row" spacing={1}>
-        <TextField 
-          fullWidth 
-          size="small" 
-          placeholder="Type a message..." 
-          value={newMessage}
-          onChange={(e) => setNewMessage(e.target.value)}
-          onKeyPress={(e) => e.key === 'Enter' && sendMessage()}
-        />
-        <Button variant="contained" onClick={sendMessage} disabled={!newMessage.trim()}>
-          Send
-        </Button>
-      </Stack>
+      {/* Input bar */}
+      <Box sx={{ px: 1.5, py: 1, borderTop: '1px solid', borderColor: 'divider' }}>
+        <Stack direction="row" alignItems="center" spacing={1}>
+          <IconButton size="small"><CameraAlt /></IconButton>
+          <IconButton size="small"><ImageIcon /></IconButton>
+          <TextField
+            fullWidth
+            size="small"
+            placeholder="Message..."
+            value={newMessage}
+            onChange={(e) => setNewMessage(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && sendMessage()}
+          />
+          <IconButton color="primary" disabled={!newMessage.trim()} onClick={sendMessage}>
+            <Send />
+          </IconButton>
+        </Stack>
+      </Box>
     </Box>
   );
 }

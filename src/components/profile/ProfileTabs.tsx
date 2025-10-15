@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
+import type { FC } from 'react';
 import { Tabs, Tab, Box } from '@mui/material';
 
-export const ProfileTabs: React.FC = () => {
+export const ProfileTabs: FC = () => {
   const [tab, setTab] = useState(0);
   return (
     <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>

@@ -16,6 +16,7 @@ const steps = ['Select', 'Edit', 'Caption', 'Location', 'Publish'];
 export default function PostPage() {
   const [activeStep, setActiveStep] = useState(0);
   const [files, setFiles] = useState<File[]>([]);
+  const [filters, setFilters] = useState({ brightness: 100, contrast: 100, saturation: 100 });
   const [caption, setCaption] = useState('');
   const [hashtags, setHashtags] = useState<string[]>([]);
   const [location, setLocation] = useState<string | undefined>(undefined);
@@ -25,10 +26,28 @@ export default function PostPage() {
 
   const previews = useMemo(() => files.map((f) => URL.createObjectURL(f)), [files]);
 
+  const processImageWithFilters = async (file: File): Promise<Blob> => {
+    const img = document.createElement('img');
+    img.src = URL.createObjectURL(file);
+    await new Promise((res) => (img.onload = res));
+    const canvas = document.createElement('canvas');
+    canvas.width = img.naturalWidth; canvas.height = img.naturalHeight;
+    const ctx = canvas.getContext('2d')!;
+    ctx.filter = `brightness(${filters.brightness}%) contrast(${filters.contrast}%) saturate(${filters.saturation}%)`;
+    ctx.drawImage(img, 0, 0);
+    return await new Promise((resolve) => canvas.toBlob((b) => resolve(b as Blob), 'image/jpeg', 0.9));
+  };
+
   const { mutateAsync, isLoading } = useMutation({
     mutationFn: async () => {
       if (!user?.uid || files.length === 0) throw new Error('Missing files or user');
-      const urls = await uploadImages(user.uid, files);
+      // Apply filters to first image for now
+      const processed: File[] = [];
+      for (const f of files) {
+        const blob = await processImageWithFilters(f);
+        processed.push(new File([blob], f.name.replace(/\.[^.]+$/, '') + '-edited.jpg', { type: 'image/jpeg' }));
+      }
+      const urls = await uploadImages(user.uid, processed);
       const id = await createPost({ userId: user.uid, images: urls, caption, hashtags, location });
       return id;
     },
@@ -68,7 +87,15 @@ export default function PostPage() {
             </Grid>
           </Box>
         )}
-        {activeStep === 1 && <PhotoEditor />}
+        {activeStep === 1 && (
+          <PhotoEditor
+            previewUrl={previews[0]}
+            brightness={filters.brightness}
+            contrast={filters.contrast}
+            saturation={filters.saturation}
+            onChange={setFilters}
+          />
+        )}
         {activeStep === 2 && (
           <Box>
             <TextField

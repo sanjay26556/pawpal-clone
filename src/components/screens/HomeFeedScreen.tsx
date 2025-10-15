@@ -32,6 +32,8 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { Feed } from '@/components/feed/Feed';
+import { StoriesBar } from '@/components/stories/StoriesBar';
+import { StoryViewer } from '@/components/stories/StoryViewer';
 
 // Mock data for demonstration
 const mockPosts = [
@@ -73,6 +75,8 @@ const mockPosts = [
 export const HomeFeedScreen = () => {
   const { user } = useAuth();
   const [nav, setNav] = useState(0);
+  const [storyOpen, setStoryOpen] = useState(false);
+  const [storyIndex, setStoryIndex] = useState(0);
   const navigate = useNavigate();
 
   return (
@@ -86,6 +90,14 @@ export const HomeFeedScreen = () => {
           Connect with pet lovers, share rescue stories, and help save lives
         </Typography>
       </Box>
+
+      {/* Stories */}
+      <StoriesBar
+        onStoryPress={(id) => {
+          setStoryIndex(Number(id) || 0);
+          setStoryOpen(true);
+        }}
+      />
 
       {/* User Welcome Card */}
       <Card sx={{ mb: 4, background: 'linear-gradient(45deg, #FE6B8B 30%, #FF8E53 90%)' }}>
@@ -109,20 +121,7 @@ export const HomeFeedScreen = () => {
       {/* Feed Posts */}
       <Feed />
 
-      {/* Feature Links */}
-      <Card sx={{ mt: 4, textAlign: 'center', bgcolor: 'grey.50' }}>
-        <CardContent>
-          <Typography variant="h6" gutterBottom>
-            Explore More 🚀
-          </Typography>
-          <Grid container spacing={2}>
-            <Grid item xs={6} sm={3}><Button fullWidth variant="outlined" href="/search">Search</Button></Grid>
-            <Grid item xs={6} sm={3}><Button fullWidth variant="outlined" href="/messages">Messages</Button></Grid>
-            <Grid item xs={6} sm={3}><Button fullWidth variant="outlined" href="/events">Events</Button></Grid>
-            <Grid item xs={6} sm={3}><Button fullWidth variant="outlined" href="/volunteer">Volunteer</Button></Grid>
-          </Grid>
-        </CardContent>
-      </Card>
+      {/* Feature Links removed per request */}
 
       {/* Floating Action Button */}
       <Fab
@@ -172,6 +171,19 @@ export const HomeFeedScreen = () => {
           <BottomNavigationAction icon={<PersonIcon />} />
         </BottomNavigation>
       </Paper>
+
+      {/* Story Viewer */}
+      <StoryViewer
+        open={storyOpen}
+        startIndex={storyIndex}
+        stories={[
+          { id: '0', mediaUrl: 'https://images.unsplash.com/photo-1558944351-c6ae88f7f98e?q=80&w=1600&auto=format&fit=crop', durationMs: 3500, userName: 'Sarah Johnson' },
+          { id: '1', mediaUrl: 'https://images.unsplash.com/photo-1543852786-1cf6624b9987?q=80&w=1600&auto=format&fit=crop', durationMs: 3500, userName: 'Rescue Center' },
+          { id: '2', mediaUrl: 'https://images.unsplash.com/photo-1537151625747-768eb6cf92b6?q=80&w=1600&auto=format&fit=crop', durationMs: 3500, userName: 'Mike Wilson' },
+          { id: '3', mediaUrl: 'https://images.unsplash.com/photo-1518020382113-a7e8fc38eac9?q=80&w=1600&auto=format&fit=crop', durationMs: 3500, userName: 'Pet Lovers Club' },
+        ]}
+        onClose={() => setStoryOpen(false)}
+      />
     </Container>
   );
 };
